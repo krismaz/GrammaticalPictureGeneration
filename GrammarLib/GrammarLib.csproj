@@ -43,6 +43,7 @@
     <Compile Include="Drawing.cs" />
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="DragonCurve.cs" />
+    <Compile Include="Koch.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="Point.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
