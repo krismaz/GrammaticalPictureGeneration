@@ -1,3 +1,8 @@
+import cairo
+import os
+import time
+
+
 class TreeNode:
     def __init__(self, label, children):
         self.label = label
@@ -37,6 +42,33 @@ class LineDrawing:
     def __str__(self) -> str:
         return f"[{', '.join([str(l) for l in self.lines])}] -- {self.ex, self.ey} "
 
+    def Show(self):
+        filename = f"output/{time.time()}.svg"
+        minx = min(min(l.x1, l.x2) for l in self.lines)
+        maxx = max(max(l.x1, l.x2) for l in self.lines)
+        miny = min(min(l.y1, l.y2) for l in self.lines)
+        maxy = max(max(l.y1, l.y2) for l in self.lines)
+        maxmax = max(maxx, maxy)
+
+        if minx != 1 or miny != 1:
+            self.Translate(-minx + 1, -miny + 1).Show()
+            return
+
+        with cairo.SVGSurface(filename, 500, 500) as surface:
+            context = cairo.Context(surface)
+            context.transform(cairo.Matrix(1, 0, 0, -1, 0, 500))
+
+            context.set_line_width((maxmax)/200)
+
+            context.scale(500/(maxmax+1), 500/(maxmax+1))
+            for line in self.lines:
+                context.move_to(line.x1, line.y1)
+                context.line_to(line.x2, line.y2)
+
+            context.stroke()
+
+        os.startfile(os.path.abspath(filename))
+
 
 LineDrawing.Empty = LineDrawing([], 0, 0)
 LineDrawing.Left = LineDrawing([Line(0, 0, -1, 0)], -1, 0)
@@ -55,4 +87,29 @@ def stairs(n):
     return stairs(n-1).Concatenate(stairs(n-1))
 
 
-print(stairs(3))
+def dragon(n, m) -> LineDrawing:
+    if n == 0 and m == 0:
+        return LineDrawing.Up
+    if n == 1 and m == 0:
+        return LineDrawing.Left
+    if n == 2 and m == 0:
+        return LineDrawing.Down
+    if n == 3 and m == 0:
+        return LineDrawing.Right
+    if n == 0:
+        return dragon(0, m-1).Concatenate(dragon(1, m-1))
+    if n == 1:
+        return dragon(2, m-1).Concatenate(dragon(1, m-1))
+    if n == 2:
+        return dragon(2, m-1).Concatenate(dragon(3, m-1))
+    if n == 3:
+        return dragon(0, m-1).Concatenate(dragon(3, m-1))
+
+
+def koch(n, m) -> LineDrawing:
+    # MAKE ME
+    None
+
+
+for n in range(20):
+    dragon(0, n).Show()
