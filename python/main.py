@@ -107,9 +107,27 @@ def dragon(n, m) -> LineDrawing:
 
 
 def koch(n, m) -> LineDrawing:
-    # MAKE ME
-    None
+    if n == 0 and m == 0:
+        return LineDrawing.Right
+    if n == 1 and m == 0:
+        return LineDrawing.Down
+    if n == 2 and m == 0:
+        return LineDrawing.Left
+    if n == 3 and m == 0:
+        return LineDrawing.Up
+    if n == 0:
+        return koch(0, m-1).Concatenate(koch(1, m-1)).Concatenate(koch(0, m-1)).Concatenate(koch(3, m-1)).Concatenate(koch(3, m-1)).Concatenate(koch(0, m-1)).Concatenate(koch(1, m-1)).Concatenate(koch(0, m-1))
+    if n == 1:
+        return koch(1, m-1).Concatenate(koch(2, m-1)).Concatenate(koch(1, m-1)).Concatenate(koch(0, m-1)).Concatenate(koch(0, m-1)).Concatenate(koch(1, m-1)).Concatenate(koch(2, m-1)).Concatenate(koch(1, m-1))
+    if n == 2:
+        return koch(2, m-1).Concatenate(koch(3, m-1)).Concatenate(koch(2, m-1)).Concatenate(koch(1, m-1)).Concatenate(koch(1, m-1)).Concatenate(koch(2, m-1)).Concatenate(koch(3, m-1)).Concatenate(koch(2, m-1))
+    if n == 3:
+        return koch(3, m-1).Concatenate(koch(0, m-1)).Concatenate(koch(3, m-1)).Concatenate(koch(2, m-1)).Concatenate(koch(2, m-1)).Concatenate(koch(3, m-1)).Concatenate(koch(0, m-1)).Concatenate(koch(3, m-1))
 
 
-for n in range(20):
-    dragon(0, n).Show()
+def koch_island(m) -> LineDrawing:
+    return koch(0, m).Concatenate(koch(1, m)).Concatenate(koch(2, m)).Concatenate(koch(3, m))
+
+
+for n in range(5):
+    koch_island(n).Show()
