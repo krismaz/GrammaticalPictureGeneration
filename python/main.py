@@ -1,13 +1,30 @@
 import cairo
 import os
 import time
+import random
 
 
 class TreeNode:
-    def __init__(self, label, children):
+    def __init__(self, label, children=[]):
         self.label = label
         self.children = children
         self.rank = len(children)
+
+    def Copy(self):
+        return TreeNode(self.label, [c.Copy() for c in self.children])
+
+    def Search(self, q) -> bool:
+        if self.label == q:
+            return True
+        return any(c.Search(q) for c in self.children)
+
+    def Tranform(self, rules):
+        if self.label in rules:
+            return random.choice(rules[self.label]).Copy()
+        return TreeNode(self.label, [c.Tranform(rules) for c in self.children])
+
+    def __str__(self) -> str:
+        return f"{self.label}[{', '.join(str(c) for c in self.children)}]"
 
 
 class Line:
@@ -129,5 +146,65 @@ def koch_island(m) -> LineDrawing:
     return koch(0, m).Concatenate(koch(1, m)).Concatenate(koch(2, m)).Concatenate(koch(3, m))
 
 
-for n in range(5):
-    koch_island(n).Show()
+skylineRule = {
+    "SL": [
+        TreeNode("BL"),
+        TreeNode("*",
+                 [
+                     TreeNode("*",
+                              [
+                                  TreeNode("SL"),
+                                  TreeNode("r")
+                              ]),
+                     TreeNode("SL")
+                 ])
+    ],
+    "BL": [
+        TreeNode("*",
+                 [
+                     TreeNode("r"),
+                     TreeNode("BL")
+                 ]),
+        TreeNode("*",
+                 [
+                     TreeNode("BL"),
+                     TreeNode("r")
+                 ]),
+        TreeNode("*",
+                 [
+                     TreeNode("*",
+                              [
+                                  TreeNode("u"),
+                                  TreeNode("BL")
+                              ]),
+
+                     TreeNode("d")
+                 ]),
+        TreeNode("r")
+    ]
+}
+
+
+def paint(node) -> LineDrawing:
+    match node.label:
+        case "*":
+            return paint(node.children[0]).Concatenate(paint(node.children[1]))
+        case 'u':
+            return LineDrawing.Up
+        case 'd':
+            return LineDrawing.Down
+        case 'l':
+            return LineDrawing.Left
+        case 'r':
+            return LineDrawing.Right
+        case _:
+            return LineDrawing.Empty
+
+
+root = TreeNode("SL")
+
+while any(root.Search(k) for k in skylineRule):
+    print(root)
+    root = root.Tranform(skylineRule)
+
+paint(root).Show()
