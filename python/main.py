@@ -2,6 +2,7 @@ import cairo
 import os
 import time
 import random
+from math import sin, cos, pi
 
 
 class TreeNode:
@@ -185,6 +186,81 @@ skylineRule = {
 }
 
 
+def concat_help(strings):
+    if len(strings) == 1:
+        return TreeNode(strings[0])
+    return TreeNode("*", [TreeNode(strings[0]), concat_help(strings[1:])])
+
+
+def concat_help_string(string):
+    return concat_help([str(c) for c in string])
+
+
+def concat_help_nodes(nodes):
+    if len(nodes) == 1:
+        return nodes[0]
+    return TreeNode("*", [nodes[0], concat_help_nodes(nodes[1:])])
+
+
+kochRule = {
+    "r": [concat_help(["r", "u", "r", "d", "r"])],
+    "u": [concat_help(["u", "l", "u", "r", "u"])],
+    "d": [concat_help(["d", "r", "d", "l", "d"])],
+    "l": [concat_help(["l", "d", "l", "u", "l"])]
+}
+
+hilbertRule = {
+    "A": [concat_help_string("BuArAdC")],
+    "B": [concat_help_string("ArBuBlD")],
+    "C": [concat_help_string("DlCdCrA")],
+    "D": [concat_help_string("CdDlDuB")]
+}
+
+sierpinskiBaseRule = {
+    "AB": [concat_help(["AC", "AB", "CB"])],
+    "AC": [concat_help(["AB", "AC", "BC"])],
+    "BA": [concat_help(["BC", "BA", "CA"])],
+    "BC": [concat_help(["BA", "BC", "AC"])],
+    "CA": [concat_help(["CB", "CA", "BA"])],
+    "CB": [concat_help(["CA", "CB", "AB"])],
+}
+
+sierpinskiGasketRule = {
+    "AB": [TreeNode("r")],
+    "AC": [TreeNode("u")],
+    "BA": [TreeNode("l")],
+    "BC": [concat_help_string("lu")],
+    "CA": [TreeNode("d")],
+    "CB": [concat_help_string("dr")],
+}
+
+sierpinskiAltRule = {
+    "AB": [concat_help_string("rrrr")],
+    "AC": [concat_help_string("rruuu")],
+    "BA": [concat_help_string("llll")],
+    "BC": [concat_help_string("lluuu")],
+    "CA": [concat_help_string("dddll")],
+    "CB": [concat_help_string("dddrr")],
+}
+
+turtleKochRule = {
+    "F": [concat_help_nodes([TreeNode("F"), TreeNode("+", [TreeNode("F")]), TreeNode("-", [TreeNode("F")]), TreeNode("F")])]
+}
+
+turtleTreeRule = {
+    "F": [concat_help_nodes([TreeNode("F"),
+                             TreeNode("F"),
+                             TreeNode("enc",
+                                      [TreeNode("+",
+                                                [concat_help_nodes([TreeNode("F"), TreeNode("F")])])]),
+                             TreeNode("enc",
+                                      [TreeNode("-",
+                                                [concat_help_nodes([TreeNode("F"), TreeNode("+", [TreeNode("F")])])])])
+                             ])]
+
+}
+
+
 def paint(node) -> LineDrawing:
     match node.label:
         case "*":
@@ -201,10 +277,31 @@ def paint(node) -> LineDrawing:
             return LineDrawing.Empty
 
 
-root = TreeNode("SL")
+def turtlepaint(node, angle, turn0=0, a0=0) -> LineDrawing:
+    match node.label:
+        case "*":
+            return turtlepaint(node.children[0], angle, turn0, a0).Concatenate(turtlepaint(node.children[1], angle, turn0, a0))
+        case 'F':
+            x, y = cos(turn0*angle + a0), sin(turn0*angle + a0)
+            return LineDrawing([Line(0, 0, x, y)], x, y)
+        case '+':
+            return turtlepaint(node.children[0], angle, turn0+1, a0)
+        case '-':
+            return turtlepaint(node.children[0], angle, turn0-1, a0)
+        case 'enc':
+            branch = turtlepaint(node.children[0], angle, turn0, a0)
+            branch.ex = branch.ey = 0
+            return branch
+        case 'hide':
+            branch = turtlepaint(node.children[0], angle, turn0, a0)
+            branch.lines = []
+            return branch
+        case _:
+            return LineDrawing.Empty
 
-while any(root.Search(k) for k in skylineRule):
-    print(root)
-    root = root.Tranform(skylineRule)
 
-paint(root).Show()
+root = TreeNode("F")
+
+for i in range(5):
+    root = root.Tranform(turtleTreeRule)
+    turtlepaint(root, pi/9, 0, pi/2).Show()
